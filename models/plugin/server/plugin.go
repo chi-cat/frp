@@ -19,10 +19,11 @@ import (
 )
 
 const (
-	APIVersion = "0.1.0"
+	APIVersion = "0.1.1"
 
-	OpLogin    = "Login"
-	OpNewProxy = "NewProxy"
+	OpLogin     = "Login"
+	OpNewProxy  = "NewProxy"
+	OpHeartbeat = "Heartbeat"
 )
 
 type Plugin interface {

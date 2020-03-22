@@ -44,3 +44,8 @@ type NewProxyContent struct {
 	User UserInfo `json:"user"`
 	msg.NewProxy
 }
+
+type HeartbeatContent struct {
+	User UserInfo `json:"user"`
+	msg.Heartbeat
+}

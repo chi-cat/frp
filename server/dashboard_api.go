@@ -33,16 +33,17 @@ type GeneralResponse struct {
 }
 
 type ServerInfoResp struct {
-	Version           string `json:"version"`
-	BindPort          int    `json:"bind_port"`
-	BindUdpPort       int    `json:"bind_udp_port"`
-	VhostHttpPort     int    `json:"vhost_http_port"`
-	VhostHttpsPort    int    `json:"vhost_https_port"`
-	KcpBindPort       int    `json:"kcp_bind_port"`
-	SubdomainHost     string `json:"subdomain_host"`
-	MaxPoolCount      int64  `json:"max_pool_count"`
-	MaxPortsPerClient int64  `json:"max_ports_per_client"`
-	HeartBeatTimeout  int64  `json:"heart_beat_timeout"`
+	Version            string `json:"version"`
+	BindPort           int    `json:"bind_port"`
+	BindUdpPort        int    `json:"bind_udp_port"`
+	VhostHttpPort      int    `json:"vhost_http_port"`
+	VhostHttpsPort     int    `json:"vhost_https_port"`
+	KcpBindPort        int    `json:"kcp_bind_port"`
+	SubdomainHost      string `json:"subdomain_host"`
+	MaxPoolCount       int64  `json:"max_pool_count"`
+	MaxPortsPerClient  int64  `json:"max_ports_per_client"`
+	HeartBeatTimeout   int64  `json:"heart_beat_timeout"`
+	HeartbeatCycPeriod int    `json:"heartbeat_cyc_period"`
 
 	TotalTrafficIn  int64            `json:"total_traffic_in"`
 	TotalTrafficOut int64            `json:"total_traffic_out"`
@@ -65,16 +66,17 @@ func (svr *Service) ApiServerInfo(w http.ResponseWriter, r *http.Request) {
 	log.Info("Http request: [%s]", r.URL.Path)
 	serverStats := mem.StatsCollector.GetServer()
 	svrResp := ServerInfoResp{
-		Version:           version.Full(),
-		BindPort:          svr.cfg.BindPort,
-		BindUdpPort:       svr.cfg.BindUdpPort,
-		VhostHttpPort:     svr.cfg.VhostHttpPort,
-		VhostHttpsPort:    svr.cfg.VhostHttpsPort,
-		KcpBindPort:       svr.cfg.KcpBindPort,
-		SubdomainHost:     svr.cfg.SubDomainHost,
-		MaxPoolCount:      svr.cfg.MaxPoolCount,
-		MaxPortsPerClient: svr.cfg.MaxPortsPerClient,
-		HeartBeatTimeout:  svr.cfg.HeartBeatTimeout,
+		Version:            version.Full(),
+		BindPort:           svr.cfg.BindPort,
+		BindUdpPort:        svr.cfg.BindUdpPort,
+		VhostHttpPort:      svr.cfg.VhostHttpPort,
+		VhostHttpsPort:     svr.cfg.VhostHttpsPort,
+		KcpBindPort:        svr.cfg.KcpBindPort,
+		SubdomainHost:      svr.cfg.SubDomainHost,
+		MaxPoolCount:       svr.cfg.MaxPoolCount,
+		MaxPortsPerClient:  svr.cfg.MaxPortsPerClient,
+		HeartBeatTimeout:   svr.cfg.HeartBeatTimeout,
+		HeartbeatCycPeriod: svr.cfg.HeartbeatCycPeriod,
 
 		TotalTrafficIn:  serverStats.TotalTrafficIn,
 		TotalTrafficOut: serverStats.TotalTrafficOut,

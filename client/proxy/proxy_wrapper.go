@@ -124,6 +124,18 @@ func (pw *ProxyWrapper) SetRunningStatus(remoteAddr string, respErr string) erro
 	return nil
 }
 
+func (pw *ProxyWrapper) SetCheckFailedStatus(respErr string) error {
+	xl := pw.xl
+	pw.mu.Lock()
+	defer pw.mu.Unlock()
+	if pw.Status == ProxyStatusRunning || pw.Status == ProxyStatusWaitStart {
+		xl.Warn("change status from [%s] to [%s] pause by [%s]", pw.Status, ProxyStatusCheckFailed, respErr)
+		pw.close()
+		pw.Status = ProxyStatusCheckFailed
+	}
+	return nil
+}
+
 func (pw *ProxyWrapper) Start() {
 	go pw.checkWorker()
 	if pw.monitor != nil {

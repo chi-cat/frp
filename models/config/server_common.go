@@ -145,6 +145,8 @@ type ServerCommonConf struct {
 	UserConnTimeout int64 `json:"user_conn_timeout"`
 	// HTTPPlugins specify the server plugins support HTTP protocol.
 	HTTPPlugins map[string]plugin.HTTPPluginOptions `json:"http_plugins"`
+	// HeartbeatCycPeriod
+	HeartbeatCycPeriod int `json:"heartbeat_cyc_period"`
 }
 
 // GetDefaultServerConf returns a server configuration with reasonable
@@ -179,6 +181,7 @@ func GetDefaultServerConf() ServerCommonConf {
 		MaxPortsPerClient:      0,
 		TlsOnly:                false,
 		HeartBeatTimeout:       90,
+		HeartbeatCycPeriod:     60,
 		UserConnTimeout:        10,
 		Custom404Page:          "",
 		HTTPPlugins:            make(map[string]plugin.HTTPPluginOptions),
@@ -416,6 +419,17 @@ func UnmarshalServerConfFromIni(content string) (cfg ServerCommonConf, err error
 	} else {
 		cfg.TlsOnly = false
 	}
+
+	if tmpStr, ok = conf.Get("common", "heartbeat_cyc_period"); ok {
+		v, errRet := strconv.ParseInt(tmpStr, 10, 64)
+		if errRet != nil {
+			err = fmt.Errorf("Parse conf error: heartbeat_cyc_period is incorrect")
+			return
+		} else {
+			cfg.HeartbeatCycPeriod = int(v)
+		}
+	}
+
 	return
 }
 

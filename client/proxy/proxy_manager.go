@@ -55,6 +55,23 @@ func (pm *ProxyManager) StartProxy(name string, remoteAddr string, serverRespErr
 	return nil
 }
 
+func (pm *ProxyManager) PauseProxy(name string, serverRespErr string) error {
+	pm.mu.RLock()
+	pxy, ok := pm.proxies[name]
+	pm.mu.RUnlock()
+	if !ok {
+		return fmt.Errorf("proxy [%s] not found", name)
+	}
+
+	//pxy.Stop()
+
+	err := pxy.SetCheckFailedStatus(serverRespErr)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (pm *ProxyManager) Close() {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()

@@ -180,6 +180,18 @@ func (ctl *Control) HandleNewProxyResp(inMsg *msg.NewProxyResp) {
 	}
 }
 
+func (ctl *Control) HandleHeartbeatErrorResp(inMsg *msg.HeartbeatErrorResp) {
+	xl := ctl.xl
+	// Server will return NewProxyResp message to each NewProxy message.
+	// Start a new proxy handler if no error got
+	err := ctl.pm.PauseProxy(inMsg.ProxyName, inMsg.Error)
+	if err != nil {
+		xl.Warn("[%s] pause error: %v", inMsg.ProxyName, err)
+	} else {
+		xl.Info("[%s] pause proxy success", inMsg.ProxyName)
+	}
+}
+
 func (ctl *Control) Close() error {
 	ctl.pm.Close()
 	ctl.conn.Close()
@@ -320,6 +332,8 @@ func (ctl *Control) msgHandler() {
 				go ctl.HandleReqWorkConn(m)
 			case *msg.NewProxyResp:
 				ctl.HandleNewProxyResp(m)
+			case *msg.HeartbeatErrorResp:
+				ctl.HandleHeartbeatErrorResp(m)
 			case *msg.Pong:
 				if m.Error != "" {
 					xl.Error("Pong contains error: %s", m.Error)

@@ -142,6 +142,8 @@ type Control struct {
 
 	xl  *xlog.Logger
 	ctx context.Context
+
+	heartbeatCycCount int
 }
 
 func NewControl(
@@ -160,28 +162,29 @@ func NewControl(
 		poolCount = int(serverCfg.MaxPoolCount)
 	}
 	return &Control{
-		rc:              rc,
-		pxyManager:      pxyManager,
-		pluginManager:   pluginManager,
-		authVerifier:    authVerifier,
-		conn:            ctlConn,
-		loginMsg:        loginMsg,
-		sendCh:          make(chan msg.Message, 10),
-		readCh:          make(chan msg.Message, 10),
-		workConnCh:      make(chan net.Conn, poolCount+10),
-		proxies:         make(map[string]proxy.Proxy),
-		poolCount:       poolCount,
-		portsUsedNum:    0,
-		lastPing:        time.Now(),
-		runId:           loginMsg.RunId,
-		status:          consts.Working,
-		readerShutdown:  shutdown.New(),
-		writerShutdown:  shutdown.New(),
-		managerShutdown: shutdown.New(),
-		allShutdown:     shutdown.New(),
-		serverCfg:       serverCfg,
-		xl:              xlog.FromContextSafe(ctx),
-		ctx:             ctx,
+		rc:                rc,
+		pxyManager:        pxyManager,
+		pluginManager:     pluginManager,
+		authVerifier:      authVerifier,
+		conn:              ctlConn,
+		loginMsg:          loginMsg,
+		sendCh:            make(chan msg.Message, 10),
+		readCh:            make(chan msg.Message, 10),
+		workConnCh:        make(chan net.Conn, poolCount+10),
+		proxies:           make(map[string]proxy.Proxy),
+		poolCount:         poolCount,
+		portsUsedNum:      0,
+		lastPing:          time.Now(),
+		runId:             loginMsg.RunId,
+		status:            consts.Working,
+		readerShutdown:    shutdown.New(),
+		writerShutdown:    shutdown.New(),
+		managerShutdown:   shutdown.New(),
+		allShutdown:       shutdown.New(),
+		serverCfg:         serverCfg,
+		xl:                xlog.FromContextSafe(ctx),
+		ctx:               ctx,
+		heartbeatCycCount: 0,
 	}
 }
 
@@ -411,6 +414,34 @@ func (ctl *Control) manager() {
 				xl.Warn("heartbeat timeout")
 				return
 			}
+			ctl.heartbeatCycCount++
+			//
+			if ctl.heartbeatCycCount > ctl.serverCfg.HeartbeatCycPeriod {
+				for k, v := range ctl.proxies {
+					var m msg.Heartbeat
+					v.GetConf().MarshalToHeartbeatMsg(&m)
+					content := &plugin.HeartbeatContent{
+						User: plugin.UserInfo{
+							User:  ctl.loginMsg.User,
+							Metas: ctl.loginMsg.Metas,
+						},
+						Heartbeat: m,
+					}
+					if err := ctl.pluginManager.Heartbeat(content); err != nil {
+
+						resp := &msg.HeartbeatErrorResp{
+							ProxyName: m.ProxyName,
+						}
+						xl.Warn("heartbeat period [%d] validate [%s] error: %v", ctl.serverCfg.HeartbeatCycPeriod, m.ProxyName, err)
+						resp.Error = util.GenerateResponseErrorString(fmt.Sprintf("heartbeat validate [%s] error", m.ProxyName), err, ctl.serverCfg.DetailedErrorsToClient)
+						ctl.sendCh <- resp
+
+						ctl.CloseProxy(&msg.CloseProxy{ProxyName: k})
+					}
+				}
+				ctl.heartbeatCycCount = 0
+			}
+
 		case rawMsg, ok := <-ctl.readCh:
 			if !ok {
 				return

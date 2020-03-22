@@ -119,14 +119,14 @@ func NewService(cfg config.ServerCommonConf) (svr *Service, err error) {
 		svr.pluginManager.Register(plugin.NewHTTPPluginOptions(options))
 		log.Info("plugin [%s] has been registered", name)
 	}
-	b := plugin.NewHTTPPluginOptions(plugin.HTTPPluginOptions{
-		Name: "heartnate-test",
-		Addr: "127.0.0.1:4000",
-		Path: "/auth",
-		Ops:  []string{"Heartbeat"},
-	})
-
-	svr.pluginManager.Register(b)
+	//b := plugin.NewHTTPPluginOptions(plugin.HTTPPluginOptions{
+	//	Name: "heartnate-test",
+	//	Addr: "127.0.0.1:4000",
+	//	Path: "/auth",
+	//	Ops:  []string{"Heartbeat"},
+	//})
+	//
+	//svr.pluginManager.Register(b)
 
 	// Init group controller
 	svr.rc.TcpGroupCtl = group.NewTcpGroupCtl(svr.rc.TcpPortManager)

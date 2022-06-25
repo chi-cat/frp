@@ -69,3 +69,8 @@ type NewUserConnContent struct {
 	ProxyType  string   `json:"proxy_type"`
 	RemoteAddr string   `json:"remote_addr"`
 }
+
+type HeartbeatContent struct {
+	User UserInfo `json:"user"`
+	msg.Heartbeat
+}

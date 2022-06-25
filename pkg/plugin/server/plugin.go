@@ -27,6 +27,7 @@ const (
 	OpPing        = "Ping"
 	OpNewWorkConn = "NewWorkConn"
 	OpNewUserConn = "NewUserConn"
+	OpHeartbeat   = "Heartbeat"
 )
 
 type Plugin interface {

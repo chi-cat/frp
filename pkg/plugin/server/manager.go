@@ -31,6 +31,7 @@ type Manager struct {
 	pingPlugins        []Plugin
 	newWorkConnPlugins []Plugin
 	newUserConnPlugins []Plugin
+	heartbeatPlugins   []Plugin
 }
 
 func NewManager() *Manager {
@@ -41,6 +42,7 @@ func NewManager() *Manager {
 		pingPlugins:        make([]Plugin, 0),
 		newWorkConnPlugins: make([]Plugin, 0),
 		newUserConnPlugins: make([]Plugin, 0),
+		heartbeatPlugins:   make([]Plugin, 0),
 	}
 }
 
@@ -62,6 +64,9 @@ func (m *Manager) Register(p Plugin) {
 	}
 	if p.IsSupport(OpNewUserConn) {
 		m.newUserConnPlugins = append(m.newUserConnPlugins, p)
+	}
+	if p.IsSupport(OpHeartbeat) {
+		m.heartbeatPlugins = append(m.heartbeatPlugins, p)
 	}
 }
 
@@ -259,4 +264,29 @@ func (m *Manager) NewUserConn(content *NewUserConnContent) (*NewUserConnContent,
 		}
 	}
 	return content, nil
+}
+
+func (m *Manager) Heartbeat(content *HeartbeatContent) error {
+	var (
+		res = &Response{
+			Reject:   false,
+			Unchange: true,
+		}
+		err error
+	)
+	reqid, _ := util.RandID()
+	xl := xlog.New().AppendPrefix("reqid: " + reqid)
+	ctx := xlog.NewContext(context.Background(), xl)
+	ctx = NewReqidContext(ctx, reqid)
+	for _, p := range m.heartbeatPlugins {
+		res, _, err = p.Handle(ctx, OpHeartbeat, *content)
+		if err != nil {
+			xl.Warn("send Heartbeat request to plugin [%s] error: %v", p.Name(), err)
+			return errors.New("send Heartbeat request to plugin error")
+		}
+		if res.Reject {
+			return fmt.Errorf("%s", res.RejectReason)
+		}
+	}
+	return nil
 }

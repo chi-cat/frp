@@ -424,8 +424,37 @@ func (ctl *Control) manager() {
 		heartbeatCh = heartbeat.C
 	}
 
+	var serverHeartbeatCh <-chan time.Time
+	{
+		c := time.NewTicker(time.Minute)
+		defer c.Stop()
+		serverHeartbeatCh = c.C
+	}
 	for {
 		select {
+		case <-serverHeartbeatCh:
+			for k, v := range ctl.proxies {
+				var m msg.Heartbeat
+				v.GetConf().MarshalToHeartbeatMsg(&m)
+				content := &plugin.HeartbeatContent{
+					User: plugin.UserInfo{
+						User:  ctl.loginMsg.User,
+						Metas: ctl.loginMsg.Metas,
+					},
+					Heartbeat: m,
+				}
+				if err := ctl.pluginManager.Heartbeat(content); err != nil {
+
+					resp := &msg.HeartbeatErrorResp{
+						ProxyName: m.ProxyName,
+					}
+					xl.Warn("server heartbeat validate [%s] error: %v", m.ProxyName, err)
+					resp.Error = util.GenerateResponseErrorString(fmt.Sprintf("heartbeat validate [%s] error", m.ProxyName), err, ctl.serverCfg.DetailedErrorsToClient)
+					ctl.sendCh <- resp
+
+					ctl.CloseProxy(&msg.CloseProxy{ProxyName: k})
+				}
+			}
 		case <-heartbeatCh:
 			if time.Since(ctl.lastPing) > time.Duration(ctl.serverCfg.HeartbeatTimeout)*time.Second {
 				xl.Warn("heartbeat timeout")

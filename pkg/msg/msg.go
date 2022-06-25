@@ -35,6 +35,7 @@ const (
 	TypeNatHoleResp           = 'm'
 	TypeNatHoleClientDetectOK = 'd'
 	TypeNatHoleSid            = '5'
+	TypeHeartbeatErrorResp    = '6'
 )
 
 var (
@@ -57,6 +58,7 @@ var (
 		TypeNatHoleResp:           NatHoleResp{},
 		TypeNatHoleClientDetectOK: NatHoleClientDetectOK{},
 		TypeNatHoleSid:            NatHoleSid{},
+		TypeHeartbeatErrorResp:    HeartbeatErrorResp{},
 	}
 )
 
@@ -191,4 +193,37 @@ type NatHoleClientDetectOK struct {
 
 type NatHoleSid struct {
 	Sid string `json:"sid"`
+}
+
+type Heartbeat struct {
+	ProxyName      string            `json:"proxy_name"`
+	ProxyType      string            `json:"proxy_type"`
+	UseEncryption  bool              `json:"use_encryption"`
+	UseCompression bool              `json:"use_compression"`
+	Group          string            `json:"group"`
+	GroupKey       string            `json:"group_key"`
+	Metas          map[string]string `json:"metas"`
+
+	// tcp and udp only
+	RemotePort int `json:"remote_port"`
+
+	// http and https only
+	CustomDomains     []string          `json:"custom_domains"`
+	SubDomain         string            `json:"subdomain"`
+	Locations         []string          `json:"locations"`
+	HttpUser          string            `json:"http_user"`
+	HttpPwd           string            `json:"http_pwd"`
+	HostHeaderRewrite string            `json:"host_header_rewrite"`
+	Headers           map[string]string `json:"headers"`
+
+	// stcp
+	Sk string `json:"sk"`
+
+	// tcpmux
+	Multiplexer string `json:"multiplexer"`
+}
+
+type HeartbeatErrorResp struct {
+	ProxyName string `json:"proxy_name"`
+	Error     string `json:"error"`
 }

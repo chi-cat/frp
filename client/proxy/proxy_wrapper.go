@@ -248,3 +248,15 @@ func (pw *Wrapper) GetStatus() *WorkingStatus {
 	}
 	return ps
 }
+
+func (pw *Wrapper) SetCheckFailedStatus(respErr string) error {
+	xl := pw.xl
+	pw.mu.Lock()
+	defer pw.mu.Unlock()
+	if pw.Phase == ProxyPhaseRunning || pw.Phase == ProxyPhaseWaitStart {
+		xl.Warn("change status from [%s] to [%s] pause by [%s]", pw.Phase, ProxyPhaseCheckFailed, respErr)
+		pw.close()
+		pw.Phase = ProxyPhaseCheckFailed
+	}
+	return nil
+}

@@ -144,3 +144,20 @@ func (pm *Manager) Reload(pxyCfgs map[string]config.ProxyConf) {
 		xl.Info("proxy added: %v", addPxyNames)
 	}
 }
+
+func (pm *Manager) PauseProxy(name string, serverRespErr string) error {
+	pm.mu.RLock()
+	pxy, ok := pm.proxies[name]
+	pm.mu.RUnlock()
+	if !ok {
+		return fmt.Errorf("proxy [%s] not found", name)
+	}
+
+	//pxy.Stop()
+
+	err := pxy.SetCheckFailedStatus(serverRespErr)
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -53,6 +53,7 @@ type ProxyConf interface {
 	UnmarshalFromMsg(*msg.NewProxy)
 	UnmarshalFromIni(string, string, *ini.Section) error
 	MarshalToMsg(*msg.NewProxy)
+	MarshalToHeartbeatMsg(pMsg *msg.Heartbeat)
 	CheckForCli() error
 	CheckForSvr(ServerCommonConf) error
 	Compare(ProxyConf) bool
@@ -1060,4 +1061,61 @@ func (cfg *XTCPProxyConf) CheckForCli() (err error) {
 
 func (cfg *XTCPProxyConf) CheckForSvr(serverCfg ServerCommonConf) error {
 	return nil
+}
+
+func (cfg *DomainConf) MarshalToHeartbeatMsg(pMsg *msg.Heartbeat) {
+	pMsg.CustomDomains = cfg.CustomDomains
+	pMsg.SubDomain = cfg.SubDomain
+}
+
+func (cfg *BaseProxyConf) MarshalToHeartbeatMsg(pMsg *msg.Heartbeat) {
+	pMsg.ProxyName = cfg.ProxyName
+	pMsg.ProxyType = cfg.ProxyType
+	pMsg.UseEncryption = cfg.UseEncryption
+	pMsg.UseCompression = cfg.UseCompression
+	pMsg.Group = cfg.Group
+	pMsg.GroupKey = cfg.GroupKey
+	pMsg.Metas = cfg.Metas
+}
+
+func (cfg *TCPProxyConf) MarshalToHeartbeatMsg(pMsg *msg.Heartbeat) {
+	cfg.BaseProxyConf.MarshalToHeartbeatMsg(pMsg)
+	pMsg.RemotePort = cfg.RemotePort
+}
+
+func (cfg *TCPMuxProxyConf) MarshalToHeartbeatMsg(pMsg *msg.Heartbeat) {
+	cfg.BaseProxyConf.MarshalToHeartbeatMsg(pMsg)
+	cfg.DomainConf.MarshalToHeartbeatMsg(pMsg)
+	pMsg.Multiplexer = cfg.Multiplexer
+}
+
+func (cfg *UDPProxyConf) MarshalToHeartbeatMsg(pMsg *msg.Heartbeat) {
+	cfg.BaseProxyConf.MarshalToHeartbeatMsg(pMsg)
+	pMsg.RemotePort = cfg.RemotePort
+}
+
+func (cfg *HTTPSProxyConf) MarshalToHeartbeatMsg(pMsg *msg.Heartbeat) {
+	cfg.BaseProxyConf.MarshalToHeartbeatMsg(pMsg)
+	cfg.DomainConf.MarshalToHeartbeatMsg(pMsg)
+}
+
+func (cfg *STCPProxyConf) MarshalToHeartbeatMsg(pMsg *msg.Heartbeat) {
+	cfg.BaseProxyConf.MarshalToHeartbeatMsg(pMsg)
+	pMsg.Sk = cfg.Sk
+}
+
+func (cfg *XTCPProxyConf) MarshalToHeartbeatMsg(pMsg *msg.Heartbeat) {
+	cfg.BaseProxyConf.MarshalToHeartbeatMsg(pMsg)
+	pMsg.Sk = cfg.Sk
+}
+
+func (cfg *HTTPProxyConf) MarshalToHeartbeatMsg(pMsg *msg.Heartbeat) {
+	cfg.BaseProxyConf.MarshalToHeartbeatMsg(pMsg)
+	cfg.DomainConf.MarshalToHeartbeatMsg(pMsg)
+
+	pMsg.Locations = cfg.Locations
+	pMsg.HostHeaderRewrite = cfg.HostHeaderRewrite
+	pMsg.HttpUser = cfg.HTTPUser
+	pMsg.HttpPwd = cfg.HTTPPwd
+	pMsg.Headers = cfg.Headers
 }
